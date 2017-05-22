@@ -10,6 +10,7 @@ import java.awt.image.BufferedImage;
 public class Helicopter {
     private Image helicopterImage;
     private int locationX = 0, locationY = 0;
+    private int acceleration = 0;
 
     public Helicopter(int initialWidth, int initialHeight) {
         helicopterImage = Toolkit.getDefaultToolkit().getImage(this.getClass().getResource("resources/helicopter.png"));
@@ -58,6 +59,18 @@ public class Helicopter {
         return locationY;
     }
 
+    public int getAcceleration() {
+        return acceleration;
+    }
+
+    public void setAcceleration(int acceleration) {
+        this.acceleration = acceleration;
+    }
+
+    public void accelerate(int acceleration) {
+        this.acceleration += acceleration;
+    }
+
     public Rectangle getRectangle() {
         return (new Rectangle(locationX, locationY, helicopterImage.getWidth(null), helicopterImage.getHeight(null)));
     }
@@ -69,4 +82,5 @@ public class Helicopter {
         g.dispose();
         return bi;
     }
+
 }

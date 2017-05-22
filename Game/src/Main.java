@@ -20,13 +20,10 @@ public class Main implements ActionListener, KeyListener {
     private static final int GAME_START_DELAY = 300;
     private static final int HELICOPTER_X_STARTING_LOCATION = SCREEN_WIDTH/7;
     private static final int HELICOPTER_ASCEND_SPEED = 10, HELICOPTER_DESCEND_SPEED = HELICOPTER_ASCEND_SPEED /2;
-    private static final int HELICOPTER_JUMP_HEIGHT = OBSTACLE_GAP - HELICOPTER_HEIGHT - HELICOPTER_ASCEND_SPEED *2;
 
     private boolean mainLoop = true;
     private boolean isGameRunning = false;
-    private boolean isHelicopterAscending = false;
     private boolean spacePressed = false;
-    private boolean released = true;
     private int helicopterYBeforeJump = SCREEN_HEIGHT/2 - HELICOPTER_HEIGHT;
     private Object gameReady = new Object();
 
@@ -59,7 +56,7 @@ public class Main implements ActionListener, KeyListener {
         f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         f.setAlwaysOnTop(false);
         f.setVisible(true);
-        f.setMinimumSize(new Dimension(SCREEN_WIDTH*1/4, SCREEN_HEIGHT*1/4));
+        f.setMinimumSize(new Dimension(SCREEN_WIDTH/4, SCREEN_HEIGHT/4));
         f.setExtendedState(JFrame.MAXIMIZED_BOTH);
         f.setIconImage(icon);
         f.addKeyListener(this);
@@ -112,7 +109,7 @@ public class Main implements ActionListener, KeyListener {
 
         int obstacleX1 = SCREEN_WIDTH + GAME_START_DELAY, obstacleX2 = (int) (3.0/2.0*SCREEN_WIDTH+OBSTACLE_WIDTH/2.0)+ GAME_START_DELAY;
         int obstacleY1 = bottomObstacleHeight(), obstacleY2 = bottomObstacleHeight();
-        int helicopterX = HELICOPTER_X_STARTING_LOCATION, helicopterY = helicopterYBeforeJump;
+        int helicopterY = helicopterYBeforeJump;
 
         long startTime = System.currentTimeMillis();
 
@@ -135,38 +132,28 @@ public class Main implements ActionListener, KeyListener {
                 botObstacle2.setX(obstacleX2);
                 botObstacle2.setY(obstacleY2);
                 topObstacle1.setX(obstacleX1);
-                topObstacle1.setY(obstacleY1 -OBSTACLE_GAP-OBSTACLE_HEIGHT);
+                topObstacle1.setY(obstacleY1 - OBSTACLE_GAP - OBSTACLE_HEIGHT);
                 topObstacle2.setX(obstacleX2);
-                topObstacle2.setY(obstacleY2 -OBSTACLE_GAP-OBSTACLE_HEIGHT);
+                topObstacle2.setY(obstacleY2 - OBSTACLE_GAP - OBSTACLE_HEIGHT);
 
-                if (!isMenu && spacePressed) {
-                    helicopterYBeforeJump = helicopterY;
-                    spacePressed = false;
-                }
-
-                if (!isMenu && isHelicopterAscending) {
-                    if (helicopterYBeforeJump - helicopterY - HELICOPTER_ASCEND_SPEED < HELICOPTER_JUMP_HEIGHT) {
-                        if (helicopterY - HELICOPTER_ASCEND_SPEED > 0) {
-                            helicopterY -= HELICOPTER_ASCEND_SPEED;
-                        }
-                        else {
-                            helicopterY = 0;
-                            helicopterYBeforeJump = helicopterY;
-                            isHelicopterAscending = false;
-                        }
+                if (!isMenu) {
+                    // check whether helicopter should ascend due to button being pressed
+                    if (spacePressed) {
+                            helicopter.accelerate(HELICOPTER_ASCEND_SPEED);
+                        helicopterY = moveHelicopter(helicopterY);
+                    }
+                    // check whether helicopter should ascend due to its acceleration
+                    else if (helicopter.getAcceleration() > 0) {
+                        helicopterY = moveHelicopter(helicopterY);
+                        helicopter.accelerate(-HELICOPTER_ASCEND_SPEED);
                     }
                     else {
-                        helicopterYBeforeJump = helicopterY;
-                        isHelicopterAscending = false;
+                        helicopterY += HELICOPTER_DESCEND_SPEED;
                     }
-                }
-                else if(!isMenu) {
-                    helicopterY += HELICOPTER_DESCEND_SPEED;
-                    helicopterYBeforeJump = helicopterY;
                 }
 
                 if (!isMenu) {
-                    helicopter.setX(helicopterX);
+                    helicopter.setX(HELICOPTER_X_STARTING_LOCATION);
                     helicopter.setY(helicopterY);
                     gameScreen.setHelicopter(helicopter);
                 }
@@ -196,16 +183,11 @@ public class Main implements ActionListener, KeyListener {
     }
 
     public void keyPressed(KeyEvent e) {
-        if (e.getKeyCode() == KeyEvent.VK_SPACE && isGameRunning && released){
-            if(isHelicopterAscending) {
-                spacePressed = true;
-            }
-            isHelicopterAscending = true;
-            released = false;
+        if (e.getKeyCode() == KeyEvent.VK_SPACE && isGameRunning && !spacePressed){
+            spacePressed = true;
         }
         else if(e.getKeyCode() == KeyEvent.VK_R && !isGameRunning) {
             helicopterYBeforeJump = SCREEN_HEIGHT/2 - HELICOPTER_HEIGHT;
-            isHelicopterAscending = false;
             actionPerformed(new ActionEvent(startGameButton, -1, ""));
         }
         else if(e.getKeyCode() == KeyEvent.VK_ESCAPE) {
@@ -214,8 +196,8 @@ public class Main implements ActionListener, KeyListener {
     }
 
     public void keyReleased(KeyEvent e) {
-        if(e.getKeyCode() == KeyEvent.VK_SPACE) {
-            released = true;
+        if (e.getKeyCode() == KeyEvent.VK_SPACE){
+            spacePressed = false;
         }
     }
 
@@ -318,5 +300,16 @@ public class Main implements ActionListener, KeyListener {
             }
         }
     }
-    
+
+    private int moveHelicopter(int helicopterY) {
+        // situation when jump doesn't result in helicopter touching the ceiling
+        if (helicopterY - HELICOPTER_ASCEND_SPEED > 0) {
+            helicopterY -= HELICOPTER_ASCEND_SPEED;
+        }
+        // situation when helicopter touches the ceiling
+        else {
+            helicopterY = 0;
+        }
+        return helicopterY;
+    }
 }
