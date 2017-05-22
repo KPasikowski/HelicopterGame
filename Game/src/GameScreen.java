@@ -1,15 +1,15 @@
 /**
  * Created by mateusz on 12.05.17.
  */
+
 import javax.swing.*;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Color;
 
-public class GameScreen extends JPanel {
-    private static final long serialVersionUID = 1L;
 
+public class GameScreen extends JPanel {
     private int screenWidth, screenHeight;
     private boolean isMenu = true;
     private int score = 0;
@@ -37,14 +37,14 @@ public class GameScreen extends JPanel {
         g.drawLine(0, screenHeight*7/8, screenWidth, screenHeight*7/8);
 
         if (botObstacle1 != null && botObstacle2 != null && topObstacle1 != null && topObstacle2 != null) {
-            g.drawImage(botObstacle1.getObstacleImage(), botObstacle1.getX(), botObstacle1.getY(), null);
-            g.drawImage(botObstacle2.getObstacleImage(), botObstacle2.getX(), botObstacle2.getY(), null);
-            g.drawImage(topObstacle1.getObstacleImage(), topObstacle1.getX(), topObstacle1.getY(), null);
-            g.drawImage(topObstacle2.getObstacleImage(), topObstacle2.getX(), topObstacle2.getY(), null);
+            g.drawImage(botObstacle1.getImage(), botObstacle1.getX(), botObstacle1.getY(), null);
+            g.drawImage(botObstacle2.getImage(), botObstacle2.getX(), botObstacle2.getY(), null);
+            g.drawImage(topObstacle1.getImage(), topObstacle1.getX(), topObstacle1.getY(), null);
+            g.drawImage(topObstacle2.getImage(), topObstacle2.getX(), topObstacle2.getY(), null);
         }
 
         if (!isMenu && helicopter != null) {
-            g.drawImage(helicopter.getHelicopterImage(), helicopter.getX(), helicopter.getY(), null);
+            g.drawImage(helicopter.getImage(), helicopter.getX(), helicopter.getY(), null);
         }
 
         g.setFont(font);

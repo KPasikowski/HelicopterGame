@@ -101,11 +101,11 @@ public class Main implements ActionListener, KeyListener {
     }
 
     private void beginGame(boolean isMenu) {
-        BottomObstacle botObstacle1 = new BottomObstacle(OBSTACLE_WIDTH, OBSTACLE_HEIGHT);
-        BottomObstacle botObstacle2 = new BottomObstacle(OBSTACLE_WIDTH, OBSTACLE_HEIGHT);
-        TopObstacle topObstacle1 = new TopObstacle(OBSTACLE_WIDTH, OBSTACLE_HEIGHT);
-        TopObstacle topObstacle2 = new TopObstacle(OBSTACLE_WIDTH, OBSTACLE_HEIGHT);
-        Helicopter helicopter = new Helicopter(HELICOPTER_WIDTH, HELICOPTER_HEIGHT);
+        BottomObstacle botObstacle1 = new BottomObstacle(OBSTACLE_WIDTH, OBSTACLE_HEIGHT, "resources/bottom_obstacle.png");
+        BottomObstacle botObstacle2 = new BottomObstacle(OBSTACLE_WIDTH, OBSTACLE_HEIGHT, "resources/bottom_obstacle.png");
+        TopObstacle topObstacle1 = new TopObstacle(OBSTACLE_WIDTH, OBSTACLE_HEIGHT, "resources/top_obstacle.png");
+        TopObstacle topObstacle2 = new TopObstacle(OBSTACLE_WIDTH, OBSTACLE_HEIGHT, "resources/top_obstacle.png");
+        Helicopter helicopter = new Helicopter(HELICOPTER_WIDTH, HELICOPTER_HEIGHT, "resources/helicopter.png");
 
         int obstacleX1 = SCREEN_WIDTH + GAME_START_DELAY, obstacleX2 = (int) (3.0/2.0*SCREEN_WIDTH+OBSTACLE_WIDTH/2.0)+ GAME_START_DELAY;
         int obstacleY1 = bottomObstacleHeight(), obstacleY2 = bottomObstacleHeight();
