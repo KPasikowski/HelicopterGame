@@ -17,19 +17,22 @@ public class Main implements ActionListener, KeyListener {
     private static final int HELICOPTER_WIDTH = 120, HELICOPTER_HEIGHT = 75;
     private static final int UPDATE_INTERVAL = 25;
     private static final int MOVEMENT_SPEED = 5;
-    private static final int GAME_START_DELAY = 300;
+    private static final int GAME_START_DELAY = 200;
     private static final int HELICOPTER_X_STARTING_LOCATION = SCREEN_WIDTH/7;
+    private static final int HELICOPTER_Y_STARTING_LOCATION = SCREEN_HEIGHT/2 - HELICOPTER_HEIGHT;
     private static final int HELICOPTER_ASCEND_SPEED = 10, HELICOPTER_DESCEND_SPEED = HELICOPTER_ASCEND_SPEED /2;
 
     private boolean mainLoop = true;
     private boolean isGameRunning = false;
     private boolean spacePressed = false;
-    private int helicopterYBeforeJump = SCREEN_HEIGHT/2 - HELICOPTER_HEIGHT;
+    private boolean isRegulatorOn = true;
     private Object gameReady = new Object();
 
     private JFrame f;
     private JButton startGameButton;
+    private JButton startRegulatorButton;
     private JPanel topPanel;
+    private JPanel buttonPanel;
 
     private static Main game;
     private static GameScreen gameScreen;
@@ -40,6 +43,10 @@ public class Main implements ActionListener, KeyListener {
 
     public static void main(String[] args) {
         game = new Main();
+        game.startGame();
+    }
+
+    private void startGame() {
         javax.swing.SwingUtilities.invokeLater(() -> {
                 game.buildFrame();
                 Thread t = new Thread(() -> game.beginGame(true));
@@ -47,7 +54,6 @@ public class Main implements ActionListener, KeyListener {
             }
         );
     }
-
 
     private void buildFrame() {
         Image icon = Toolkit.getDefaultToolkit().getImage(this.getClass().getResource("resources/helicopter.png"));
@@ -69,15 +75,32 @@ public class Main implements ActionListener, KeyListener {
         LayoutManager overlay = new OverlayLayout(topPanel);
         topPanel.setLayout(overlay);
 
+        buttonPanel = new JPanel();
+        buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.PAGE_AXIS));
+        buttonPanel.setBackground(new Color(0, 0, 0, 0));
+
         startGameButton = new JButton("Start game");
-        startGameButton.setBackground(Color.BLUE);
-        startGameButton.setForeground(Color.WHITE);
+        startGameButton.setBackground(Color.RED);
+        startGameButton.setForeground(Color.BLACK);
         startGameButton.setFocusable(false);
         startGameButton.setFont(new Font("Calibri", Font.BOLD, 42));
         startGameButton.setAlignmentX(0.5f);
         startGameButton.setAlignmentY(0.5f);
         startGameButton.addActionListener(this);
-        topPanel.add(startGameButton);
+
+        startRegulatorButton = new JButton("Start fuzzy regulator");
+        startRegulatorButton.setBackground(Color.RED);
+        startRegulatorButton.setForeground(Color.BLACK);
+        startRegulatorButton.setFocusable(false);
+        startRegulatorButton.setFont(new Font("Calibri", Font.BOLD, 42));
+        startRegulatorButton.setAlignmentX(0.5f);
+        startRegulatorButton.setAlignmentY(2.0f);
+        startRegulatorButton.addActionListener(this);
+
+        buttonPanel.add(startGameButton);
+        buttonPanel.add(startRegulatorButton);
+
+        topPanel.add(buttonPanel);
 
         gameScreen = new GameScreen(SCREEN_WIDTH, SCREEN_HEIGHT, true);
         topPanel.add(gameScreen);
@@ -109,7 +132,7 @@ public class Main implements ActionListener, KeyListener {
 
         int obstacleX1 = SCREEN_WIDTH + GAME_START_DELAY, obstacleX2 = (int) (3.0/2.0*SCREEN_WIDTH+OBSTACLE_WIDTH/2.0)+ GAME_START_DELAY;
         int obstacleY1 = bottomObstacleHeight(), obstacleY2 = bottomObstacleHeight();
-        int helicopterY = helicopterYBeforeJump;
+        int helicopterY = HELICOPTER_Y_STARTING_LOCATION;
 
         long startTime = System.currentTimeMillis();
 
@@ -150,6 +173,9 @@ public class Main implements ActionListener, KeyListener {
                     else {
                         helicopterY += HELICOPTER_DESCEND_SPEED;
                     }
+                    if (helicopterY == 0) {
+                        helicopter.setAcceleration(0);
+                    }
                 }
 
                 if (!isMenu) {
@@ -187,8 +213,7 @@ public class Main implements ActionListener, KeyListener {
             spacePressed = true;
         }
         else if(e.getKeyCode() == KeyEvent.VK_R && !isGameRunning) {
-            helicopterYBeforeJump = SCREEN_HEIGHT/2 - HELICOPTER_HEIGHT;
-            actionPerformed(new ActionEvent(startGameButton, -1, ""));
+            restartGame();
         }
         else if(e.getKeyCode() == KeyEvent.VK_ESCAPE) {
             System.exit(0);
@@ -207,7 +232,7 @@ public class Main implements ActionListener, KeyListener {
 
     private void closeMenu() {
         Thread t = new Thread(() -> {
-                topPanel.remove(startGameButton);
+                topPanel.remove(buttonPanel);
                 topPanel.remove(gameScreen);
                 topPanel.revalidate();
                 topPanel.repaint();
@@ -311,5 +336,14 @@ public class Main implements ActionListener, KeyListener {
             helicopterY = 0;
         }
         return helicopterY;
+    }
+
+    private void restartGame() {
+        f.getContentPane().removeAll();
+        f.getContentPane().invalidate();
+        f.getContentPane().revalidate();
+        f.getContentPane().repaint();
+        startGame();
+        Thread.currentThread().interrupt();
     }
 }
