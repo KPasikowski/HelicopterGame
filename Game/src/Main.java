@@ -160,6 +160,7 @@ public class Main implements ActionListener, KeyListener {
                 topObstacle2.setY(obstacleY2 - OBSTACLE_GAP - OBSTACLE_HEIGHT);
 
                 if (!isMenu) {
+
                     // check whether helicopter should ascend due to button being pressed
                     if (spacePressed) {
                             helicopter.accelerate(HELICOPTER_ASCEND_SPEED);
@@ -182,6 +183,14 @@ public class Main implements ActionListener, KeyListener {
                     helicopter.setX(HELICOPTER_X_STARTING_LOCATION);
                     helicopter.setY(helicopterY);
                     gameScreen.setHelicopter(helicopter);
+                    int heightDiff = 0;
+                    if (helicopter.getX() > botObstacle1.getX() + OBSTACLE_WIDTH) {
+                        heightDiff = -helicopterY + botObstacle2.getY() - HELICOPTER_HEIGHT;
+                    }
+                    else {
+                        heightDiff = -helicopterY + botObstacle1.getY() - HELICOPTER_HEIGHT;
+                    }
+                    double result = calculateFuzzy(heightDiff);
                 }
 
                 gameScreen.setBottomObstacle(botObstacle1, botObstacle2);
@@ -345,5 +354,21 @@ public class Main implements ActionListener, KeyListener {
         f.getContentPane().repaint();
         startGame();
         Thread.currentThread().interrupt();
+    }
+
+    private double calculateFuzzy(int heightDiff) {
+        double below = 0;
+        double above = 0;
+        if (heightDiff < -0.5*OBSTACLE_GAP) {
+            below = 1;
+        }
+        else if (heightDiff > 0.5*OBSTACLE_GAP) {
+            below = 0;
+        }
+        else {
+            below = -(double)heightDiff/((double)OBSTACLE_GAP) + 0.5;
+        }
+        above = 1 - below;
+        return below;
     }
 }
