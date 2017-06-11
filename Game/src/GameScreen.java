@@ -30,11 +30,11 @@ public class GameScreen extends JPanel {
         super.paintComponent(g);
 
         g.setColor(new Color(30, 30, 30));
-        g.fillRect(0, 0, screenWidth, screenHeight*7/8);
+        g.fillRect(0, 0, screenWidth, screenHeight*15/16);
         g.setColor(new Color(159, 25, 25));
-        g.fillRect(0, screenHeight*7/8, screenWidth, screenHeight/8);
+        g.fillRect(0, screenHeight*15/16, screenWidth, screenHeight/16);
         g.setColor(Color.BLACK);
-        g.drawLine(0, screenHeight*7/8, screenWidth, screenHeight*7/8);
+        g.drawLine(0, screenHeight*15/16, screenWidth, screenHeight*15/16);
 
         if (botObstacle1 != null && botObstacle2 != null && topObstacle1 != null && topObstacle2 != null) {
             g.drawImage(botObstacle1.getImage(), botObstacle1.getX(), botObstacle1.getY(), null);

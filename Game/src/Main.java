@@ -25,7 +25,7 @@ public class Main implements ActionListener, KeyListener {
     private boolean mainLoop = true;
     private boolean isGameRunning = false;
     private boolean spacePressed = false;
-    private boolean isRegulatorOn = true;
+    private boolean isRegulatorOn = false;
     private Object gameReady = new Object();
 
     private JFrame f;
@@ -113,6 +113,11 @@ public class Main implements ActionListener, KeyListener {
             mainLoop = false;
             closeMenu();
         }
+        else if (e.getSource() == startRegulatorButton) {
+            isRegulatorOn = true;
+            mainLoop = false;
+            closeMenu();
+        }
         else if (e.getSource() == gameReady) {
             Thread t = new Thread(() -> {
                     mainLoop = true;
@@ -139,12 +144,11 @@ public class Main implements ActionListener, KeyListener {
         while(mainLoop) {
             if ((System.currentTimeMillis() - startTime) > UPDATE_INTERVAL) {
                 if (obstacleX1 < -OBSTACLE_WIDTH) {
-                    obstacleX1 = SCREEN_WIDTH;
-                    obstacleY1 = bottomObstacleHeight();
-                }
-                else if (obstacleX2 < -OBSTACLE_WIDTH) {
+                    obstacleX1 = obstacleX2;
+                    obstacleY1 = obstacleY2;
                     obstacleX2 = SCREEN_WIDTH;
                     obstacleY2 = bottomObstacleHeight();
+
                 }
 
                 obstacleX1 -= MOVEMENT_SPEED;
@@ -160,7 +164,6 @@ public class Main implements ActionListener, KeyListener {
                 topObstacle2.setY(obstacleY2 - OBSTACLE_GAP - OBSTACLE_HEIGHT);
 
                 if (!isMenu) {
-
                     // check whether helicopter should ascend due to button being pressed
                     if (spacePressed) {
                             helicopter.accelerate(HELICOPTER_ASCEND_SPEED);
@@ -183,14 +186,10 @@ public class Main implements ActionListener, KeyListener {
                     helicopter.setX(HELICOPTER_X_STARTING_LOCATION);
                     helicopter.setY(helicopterY);
                     gameScreen.setHelicopter(helicopter);
-                    int heightDiff = 0;
-                    if (helicopter.getX() > botObstacle1.getX() + OBSTACLE_WIDTH) {
-                        heightDiff = -helicopterY + botObstacle2.getY() - HELICOPTER_HEIGHT;
+
+                    if (isRegulatorOn) {
+                        calculateFuzzy(helicopter, botObstacle1, botObstacle2);
                     }
-                    else {
-                        heightDiff = -helicopterY + botObstacle1.getY() - HELICOPTER_HEIGHT;
-                    }
-                    double result = calculateFuzzy(heightDiff);
                 }
 
                 gameScreen.setBottomObstacle(botObstacle1, botObstacle2);
@@ -211,7 +210,7 @@ public class Main implements ActionListener, KeyListener {
 
     private int bottomObstacleHeight() {
         int height = 0;
-        while (height <= OBSTACLE_GAP+50 || height >= SCREEN_HEIGHT-OBSTACLE_GAP) {
+        while (height <= OBSTACLE_GAP+10 || height >= SCREEN_HEIGHT-OBSTACLE_GAP/2) {
             height = (int)(Math.random()*((double)SCREEN_HEIGHT));
         }
         return height;
@@ -306,7 +305,7 @@ public class Main implements ActionListener, KeyListener {
         checkCollisionAccurately(helicopter.getRectangle(), topObstacle1.getRectangle(), helicopter.getBI(), topObstacle1.getBI());
         checkCollisionAccurately(helicopter.getRectangle(), topObstacle2.getRectangle(), helicopter.getBI(), topObstacle2.getBI());
 
-        if (helicopter.getY() + HELICOPTER_HEIGHT > SCREEN_HEIGHT*7/8) {
+        if (helicopter.getY() + HELICOPTER_HEIGHT > (double)15/16*SCREEN_HEIGHT) {
             gameScreen.setMessage("Game Over");
             mainLoop = false;
             isGameRunning = false;
@@ -348,6 +347,7 @@ public class Main implements ActionListener, KeyListener {
     }
 
     private void restartGame() {
+        isRegulatorOn = false;
         f.getContentPane().removeAll();
         f.getContentPane().invalidate();
         f.getContentPane().revalidate();
@@ -356,19 +356,69 @@ public class Main implements ActionListener, KeyListener {
         Thread.currentThread().interrupt();
     }
 
-    private double calculateFuzzy(int heightDiff) {
-        double below = 0;
-        double above = 0;
-        if (heightDiff < -0.5*OBSTACLE_GAP) {
-            below = 1;
-        }
-        else if (heightDiff > 0.5*OBSTACLE_GAP) {
-            below = 0;
+    private void calculateFuzzy(Helicopter helicopter, BottomObstacle botObstacle1, BottomObstacle botObstacle2) {
+        int heightDiff = 0;
+        int distance = 0;
+        if (HELICOPTER_X_STARTING_LOCATION > botObstacle1.getX() + OBSTACLE_WIDTH) {
+            heightDiff = -helicopter.getY() + botObstacle2.getY() - HELICOPTER_HEIGHT/2;
+            distance = botObstacle2.getX() - HELICOPTER_X_STARTING_LOCATION;
         }
         else {
-            below = -(double)heightDiff/((double)OBSTACLE_GAP) + 0.5;
+            heightDiff = -helicopter.getY() + botObstacle1.getY() - HELICOPTER_HEIGHT/2;
+            distance = botObstacle1.getX() - HELICOPTER_X_STARTING_LOCATION;
         }
-        above = 1 - below;
-        return below;
+
+        // height
+        boolean below;
+        if (heightDiff < 0.5*OBSTACLE_GAP) {
+            below = true;
+        }
+        else {
+            below = false;
+        }
+
+        // distance
+        boolean near;
+        if (distance < SCREEN_WIDTH/3) {
+            near = true;
+        }
+        else {
+            near = false;
+        }
+
+        // above middle of screen
+        boolean low;
+        if (helicopter.getY() + HELICOPTER_HEIGHT > SCREEN_HEIGHT/2) {
+            low = true;
+        }
+        else {
+            low = false;
+        }
+
+        // speed
+        boolean fast;
+        if (helicopter.getAcceleration() > 100) {
+            fast = true;
+        }
+        else {
+            fast = false;
+        }
+
+        // calculate control
+        if (fast) {
+            spacePressed = false;
+        }
+        else if (!near && !low) {
+            spacePressed = false;
+        }
+        else if (!near && low) {
+            spacePressed = true;
+        }
+        else if (near && below) {
+            spacePressed = true;
+        }
+        else if (near && !below) {
+            spacePressed = false;
+        }
     }
 }
