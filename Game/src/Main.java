@@ -15,7 +15,7 @@ public class Main implements ActionListener, KeyListener {
     private static final int OBSTACLE_GAP = SCREEN_HEIGHT/4;
     private static final int OBSTACLE_WIDTH = SCREEN_WIDTH/8, OBSTACLE_HEIGHT = 4*OBSTACLE_WIDTH;
     private static final int HELICOPTER_WIDTH = 120, HELICOPTER_HEIGHT = 75;
-    private static final int UPDATE_INTERVAL = 25;
+    private static final int UPDATE_INTERVAL = 5;
     private static final int MOVEMENT_SPEED = 5;
     private static final int GAME_START_DELAY = 200;
     private static final int HELICOPTER_X_STARTING_LOCATION = SCREEN_WIDTH/7;
@@ -368,56 +368,122 @@ public class Main implements ActionListener, KeyListener {
             distance = botObstacle1.getX() - HELICOPTER_X_STARTING_LOCATION;
         }
 
+        double below = calculateBelowAffiliation(heightDiff);
+        double near = calculateDistanceAffiliation(distance, botObstacle1, botObstacle2);
+        double low = calculateLowAffiliation(helicopter.getY());
+        double fast = calculateFastAffiliation(helicopter.getAcceleration());
+
+        boolean finalAbove, finalBelow, finalNear, finalFar, finalLow, finalHigh, finalFast, finalSlow;
+        if (below > 0.5) {
+            finalBelow = true;
+        }
+        else {
+            finalBelow = false;
+        }
+        finalAbove = !finalBelow;
+
+        if (near > 0.5) {
+            finalNear = true;
+        }
+        else {
+            finalNear = false;
+        }
+        finalFar = !finalNear;
+
+        if (low > 0.5) {
+            finalLow = true;
+        }
+        else {
+            finalLow = false;
+        }
+        finalHigh = !finalLow;
+
+        if (fast > 0.5) {
+            finalFast = true;
+        }
+        else {
+            finalFast = false;
+        }
+        finalSlow = !finalFast;
+
+        calculateControl(finalBelow, finalAbove, finalNear, finalFar, finalLow, finalHigh, finalSlow, finalFast);
+    }
+
+    private double calculateBelowAffiliation(int heightDiff) {
         // height
-        boolean below;
-        if (heightDiff < 0.5*OBSTACLE_GAP) {
-            below = true;
+        double below;
+        if (heightDiff < 0) {
+            below = 1.0;
+        }
+        else if (heightDiff > OBSTACLE_GAP){
+            below = 0.0;
         }
         else {
-            below = false;
+            below = -heightDiff/((double)OBSTACLE_GAP) + 1.0;
         }
+        return below;
+    }
 
+    private double calculateDistanceAffiliation(int distance, BottomObstacle botObstacle1, BottomObstacle botObstacle2) {
         // distance
-        boolean near;
-        if (distance < SCREEN_WIDTH/3) {
-            near = true;
+        double near;
+        if (distance < (botObstacle2.getX()-botObstacle1.getX())/4) {
+            near = 1.0;
+        }
+        else if (distance > 3*(botObstacle2.getX()-botObstacle1.getX())/4){
+            near = 0.0;
         }
         else {
-            near = false;
+            near = -2.0*(double)distance/((double)botObstacle2.getX()-botObstacle1.getX()) + 1.5;
         }
+        return near;
+    }
 
+    private double calculateLowAffiliation(int helicopterY) {
         // above middle of screen
-        boolean low;
-        if (helicopter.getY() + HELICOPTER_HEIGHT > SCREEN_HEIGHT/2) {
-            low = true;
+        double low;
+        if (helicopterY + HELICOPTER_HEIGHT > 3*(double)SCREEN_HEIGHT/4) {
+            low = 1.0;
+        }
+        else if (helicopterY + HELICOPTER_HEIGHT < (double)SCREEN_HEIGHT/4) {
+            low = 0.0;
         }
         else {
-            low = false;
+            low = 2.0*(double)(helicopterY + HELICOPTER_HEIGHT)/((double)SCREEN_HEIGHT) - 0.5;
         }
+        return low;
+    }
 
+    private double calculateFastAffiliation(int acceleration) {
         // speed
-        boolean fast;
-        if (helicopter.getAcceleration() > 100) {
-            fast = true;
+        double fast;
+        if (acceleration > 150) {
+            fast = 1.0;
+        }
+        else if (acceleration < 50) {
+            fast = 0.0;
         }
         else {
-            fast = false;
+            fast = (double)acceleration/100.0 - 0.5;
         }
+        return fast;
+    }
 
-        // calculate control
+    private void calculateControl(boolean below, boolean above, boolean near, boolean far, boolean low, boolean high,
+                                     boolean slow, boolean fast) {
         if (fast) {
             spacePressed = false;
         }
-        else if (!near && !low) {
+        else if (far && high) {
             spacePressed = false;
         }
-        else if (!near && low) {
+        else if (far && low) {
             spacePressed = true;
         }
         else if (near && below) {
             spacePressed = true;
         }
-        else if (near && !below) {
+        else if (near && above) {
             spacePressed = false;
         }
     }
